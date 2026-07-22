@@ -1,0 +1,1 @@
+# setup-inicio-debian-para-pc-omen-con-Nvidia
