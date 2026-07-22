@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# 1. Darle permisos de ejecución al propio archivo para el futuro
-chmod +x "$0" 2>/dev/null
-
-# 2. Auto-elevar a ROOT si no se ejecutó con sudo
-if [ "$EUID" -ne 0 ]; then
-    echo "🔑 Requeridos permisos de superusuario. Solicitando sudo..."
-    exec sudo bash "$0" "$@"
-fi
-
 # ==============================================================================
 # SCRIPT DE CONFIGURACIÓN POST-INSTALACIÓN: DEBIAN 13 (TRIXIE)
 # Hardware objetivo: GPU NVIDIA / Intel-AMD x86_64
 # Entorno: Cinnamon Desktop / LightDM
 # ==============================================================================
+
+# 1. Permisos de ejecución automáticos para el propio script
+chmod +x "$0" 2>/dev/null
+
+# 2. Auto-elevación a ROOT si no se ejecuta con sudo/su
+if [ "$EUID" -ne 0 ]; then
+    echo "🔑 Permisos de superusuario requeridos. Solicitando sudo..."
+    exec sudo bash "$0" "$@"
+fi
 
 # ------------------------------------------------------------------------------
 # ⚠️ DISCLAIMER Y ADVERTENCIAS DE SEGURIDAD
@@ -28,7 +28,6 @@ show_disclaimer() {
     echo "  2. Instalación de cabeceras de kernel (headers) y compilación DKMS."
     echo "  3. Instalación del controlador propietario de NVIDIA y firmwares."
     echo "  4. Sustitución de GDM3 por LightDM (optimizado para Cinnamon)."
-    echo "  5. Limpieza de archivos de arranque residuales en la partición EFI."
     echo ""
     echo " 🔴 REQUISITO CRÍTICO CRUCIAL:"
     echo "    Debes tener DESACTIVADO el 'Secure Boot' (Arranque Seguro) en la BIOS."
@@ -37,7 +36,7 @@ show_disclaimer() {
     echo ""
     echo " 📌 NOTA SOBRE RESPONSABILIDAD:"
     echo "    El script realiza copias de seguridad previas, pero se ejecuta bajo"
-    echo "    tu propia responsabilidad. Revisa el código antes de continuar."
+    echo "    tu propia responsabilidad."
     echo "=========================================================================="
     echo ""
     read -p "¿Has desactivado el Secure Boot en tu BIOS y deseas continuar? (s/N): " confirm
@@ -47,15 +46,7 @@ show_disclaimer() {
     fi
 }
 
-# ------------------------------------------------------------------------------
-# 1. Comprobación de Privilegios de Root
-# ------------------------------------------------------------------------------
-if [ "$EUID" -ne 0 ]; then
-  echo "❌ Error: Este script debe ejecutarse como root (usa 'sudo ./setup-debian.sh')."
-  exit 1
-fi
-
-# Mostrar el aviso y requerir confirmación
+# Mostrar aviso de seguridad y requerir confirmación
 show_disclaimer
 
 echo ""
@@ -63,9 +54,9 @@ echo "🚀 Iniciando proceso de configuración..."
 sleep 2
 
 # ------------------------------------------------------------------------------
-# 2. Configuración y Copia de Seguridad de Repositorios (sources.list)
+# 1. Configuración y Copia de Seguridad de Repositorios (sources.list)
 # ------------------------------------------------------------------------------
-echo "📦 [1/6] Configurando repositorios APT (main contrib non-free non-free-firmware)..."
+echo "📦 [1/5] Configurando repositorios APT (main contrib non-free non-free-firmware)..."
 
 SOURCES_FILE="/etc/apt/sources.list"
 BACKUP_FILE="/etc/apt/sources.list.bak_$(date +%Y%m%d_%H%M%S)"
@@ -83,46 +74,31 @@ echo "   ↳ Actualizando índice de paquetes..."
 apt update -y
 
 # ------------------------------------------------------------------------------
-# 3. Instalación de Cabeceras del Kernel y Herramientas de Compilación
+# 2. Instalación de Cabeceras del Kernel y Herramientas de Compilación
 # ------------------------------------------------------------------------------
-echo "🛠️ [2/6] Instalando Linux Headers y entorno de compilación DKMS..."
+echo "🛠️ [2/5] Instalando Linux Headers y entorno de compilación DKMS..."
 apt install -y linux-headers-$(uname -r) dkms build-essential
 
 # ------------------------------------------------------------------------------
-# 4. Instalación de Controladores NVIDIA y Firmware Propietario
+# 3. Instalación de Controladores NVIDIA y Firmware Propietario
 # ------------------------------------------------------------------------------
-echo "🎮 [3/6] Instalando controladores propietarios de NVIDIA y firmwares..."
+echo "🎮 [3/5] Instalando controladores propietarios de NVIDIA y firmwares..."
 apt install -y nvidia-driver firmware-misc-nonfree nvidia-settings nvidia-smi
 
-echo "⚙️ [4/6] Compilando módulos de kernel para la GPU..."
+echo "⚙️ [4/5] Compilando módulos de kernel para la GPU..."
 dpkg-reconfigure nvidia-kernel-dkms
 update-initramfs -u -k all
 
 # ------------------------------------------------------------------------------
-# 5. Configuración del Gestor de Pantalla (LightDM)
+# 4. Configuración del Gestor de Pantalla (LightDM)
 # ------------------------------------------------------------------------------
-echo "🖥️ [5/6] Configurando LightDM para evitar conflictos con Cinnamon/Wayland..."
+echo "🖥️ [5/5] Configurando LightDM para evitar conflictos con Cinnamon/Wayland..."
 apt install -y lightdm
 
 # Establecer LightDM como predeterminado de forma no interactiva
 echo "/usr/sbin/lightdm" > /etc/X11/default-display-manager
 systemctl disable gdm3 2>/dev/null || true
 systemctl enable lightdm
-
-# ------------------------------------------------------------------------------
-# 6. Limpieza de Restos de Arranque UEFI (Ubuntu / Duplicados)
-# ------------------------------------------------------------------------------
-echo "🧹 [6/6] Limpiando archivos obsoletos en la partición EFI..."
-
-if [ -d "/boot/efi/EFI/ubuntu" ]; then
-    rm -rf /boot/efi/EFI/ubuntu
-    echo "   ↳ Directorio /boot/efi/EFI/ubuntu eliminado."
-fi
-
-if [ -d "/boot/efi/EFI/Ubuntu" ]; then
-    rm -rf /boot/efi/EFI/Ubuntu
-    echo "   ↳ Directorio /boot/efi/EFI/Ubuntu eliminado."
-fi
 
 # ------------------------------------------------------------------------------
 # Resumen y Finalización
