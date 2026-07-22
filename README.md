@@ -22,15 +22,5 @@ Automatiza la adición de repositorios, la instalación de controladores propiet
 Puedes ejecutar el script directamente desde la terminal sin necesidad de clonar el repositorio manualmente:
 
 ```bash
-curl -fsSL [https://raw.githubusercontent.com/medulino/setup_inicio_debian/main/setup-debian.sh](https://raw.githubusercontent.com/medulino/setup_inicio_debian/main/setup-debian.sh) | bash
+curl -fsSL https://raw.githubusercontent.com/medulino/setup_inicio_debian/main/setup_inicio_debian.sh | bash
 
-### Opción 2: Clonar el repositorio
-
-# 1. Clonar el repositorio
-git clone [https://github.com/medulino/setup_inicio_debian.git](https://github.com/medulino/setup_inicio_debian.git)
-
-# 2. Entrar en la carpeta
-cd setup_inicio_debian
-
-# 3. Ejecutar el script
-bash setup_inicio_debian.sh
