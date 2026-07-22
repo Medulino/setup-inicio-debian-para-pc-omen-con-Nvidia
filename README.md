@@ -23,4 +23,14 @@ Puedes ejecutar el script directamente desde la terminal sin necesidad de clonar
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/medulino/setup_inicio_debian/main/setup_inicio_debian.sh | bash
+```
+### Opcion 2: Clonar el repo
 
+ 1. Clonar el repositorio
+git clone [https://github.com/medulino/setup_inicio_debian.git](https://github.com/medulino/setup_inicio_debian.git)
+
+ 2. Entrar en la carpeta
+cd setup_inicio_debian
+
+ 3. Ejecutar el script
+bash setup_inicio_debian.sh
